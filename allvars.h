@@ -1051,6 +1051,9 @@ static MPI_Datatype MPI_TYPE_TIME = MPI_INT;
 #define N_IMF_FORMPROPS  13  /*!< formation properties of star particles to record for output */
 #endif
 
+#ifdef GALSF_SFR_IMF_VARIATION_TEMPERATURE_DEPENDENCE
+#define N_IMF_FORMPROPS  13  /*!< formation properties of star particles to record for output */
+#endif
 
 
 #define  BITS_PER_DIMENSION 42	/* for Peano-Hilbert order. Note: Maximum is 10 to fit in 32-bit integer, 21 for 64-bit integer, 42 for 128-bit integer */
@@ -2556,6 +2559,16 @@ extern ALIGN(32) struct particle_data
 #ifdef GALSF_SFR_IMF_VARIATION
     MyFloat IMF_Mturnover; /*!< IMF turnover mass [in solar] (or any other parameter which conveniently describes the IMF) */
     MyFloat IMF_FormProps[N_IMF_FORMPROPS]; /*!< formation properties of star particles to record for output */
+#endif
+#ifdef GALSF_SFR_IMF_VARIATION_TEMPERATURE_DEPENDENCE
+    MyFloat IMF_Timf; /*!< temperature of the gas particle at the moment of star formation */
+    MyFloat IMF_FormProps[N_IMF_FORMPROPS]; /*!< formation properties of star particles to record for output */
+    MyFloat IMF_Breakpoint1; /*!< breakpoint 1 of the IMF */
+    MyFloat IMF_Breakpoint2; /*!< breakpoint 2 of the IMF */
+    MyFloat IMF_RSNe;  
+    MyFloat IMF_Jeans_Mass;
+
+
 #endif
 #ifdef GALSF_SFR_IMF_SAMPLING
     MyFloat IMF_NumMassiveStars; /*!< number of massive stars to associate with this star particle (for feedback) */

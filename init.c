@@ -269,6 +269,13 @@ void init(void)
 #ifdef GALSF_SFR_IMF_VARIATION
         if(RestartFlag == 0) {P[i].IMF_Mturnover = 2.0;} /* gives a solar-type IMF for our calculations in current code */
 #endif
+#ifdef GALSF_SFR_IMF_VARIATION_TEMPERATURE_DEPENDENCE
+        if(RestartFlag == 0) {P[i].IMF_Timf = 20;}
+        if(RestartFlag == 0) {P[i].IMF_Breakpoint1 = 0.08;} // Default value for the breakpoint 1 of the IMF
+        if(RestartFlag == 0) {P[i].IMF_Breakpoint2 = 0.5;} // Default value for the breakpoint 2 of the IMF
+        if(RestartFlag == 0) {P[i].IMF_RSNe = 1;} 
+        if(RestartFlag == 0) {P[i].IMF_Jeans_Mass = 100;} 
+#endif
 #ifdef GALSF_SFR_IMF_SAMPLING
         if(RestartFlag == 0) {P[i].IMF_NumMassiveStars = 0;}
 #if defined(SINGLE_STAR_AND_SSP_HYBRID_MODEL) && defined(SINGLE_STAR_RESTART_FROM_FIRESIM)
@@ -752,6 +759,13 @@ void init(void)
 
 #if defined GALSF_SFR_IMF_VARIATION
     for(i = 0; i < NumPart; i++) {P[i].IMF_Mturnover = 2.0;} // reset to normal IMF
+#endif
+#ifdef GALSF_SFR_IMF_VARIATION_TEMPERATURE_DEPENDENCE
+    for(i = 0; i < NumPart; i++) {P[i].IMF_Timf = 20;} // reset to normal IMF
+    for(i = 0; i < NumPart; i++) {P[i].IMF_Breakpoint1 = 0.08;} // Default value for the breakpoint 1 of the IMF
+    for(i = 0; i < NumPart; i++) {P[i].IMF_Breakpoint2 = 0.5;} // Default value for the breakpoint 2 of the IMF
+    for(i = 0; i < NumPart; i++) {P[i].IMF_RSNe = 1; //Default value of the Variable IMF RSNe to Kroupa RSNe
+    for(i = 0; i < NumPart; i++) {P[i].IMF_Jeans_Mass = 100; //Default value of the Jeans Mass
 #endif
 
 #if defined(WAKEUP) && defined(AGS_HSML_CALCULATION_IS_ACTIVE)

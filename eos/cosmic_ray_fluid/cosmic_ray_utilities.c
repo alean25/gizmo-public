@@ -900,6 +900,9 @@ double cr_get_source_injection_rate(int i)
     {
         double star_age=evaluate_stellar_age_Gyr(i), RSNe=0, agemin=0.003401, agebrk=0.01037, agemax=0.03753;
         if(star_age>agemin) {if(star_age<=agebrk) {RSNe=5.408e-4;} else {if(star_age<=agemax) {RSNe=2.516e-4;}}} // core-collapse rate [super-simple 2-piece constant] //
+        #ifdef GALSF_SFR_IMF_VARIATION_TEMPERATURE_DEPENDENCE
+                if(star_age>agemin) {if(star_age<=agebrk) {RSNe=5.408e-4 * p[i].IMF_RSNe;} else {if(star_age<=agemax) {RSNe=2.516e-4 * p[i].IMF_RSNe;}}} // core-collapse rate [super-simple 2-piece constant] //
+        #endif
         if(star_age>agemax) {RSNe=5.3e-8 + 1.6e-5*exp(-0.5*((star_age-0.05)/0.01)*((star_age-0.05)/0.01));} // Ia (prompt Gaussian+delay, Manucci+06)
         Edot = All.CosmicRay_SNeFraction * (RSNe*UNIT_TIME_IN_MYR) * (P[i].Mass*UNIT_MASS_IN_SOLAR) * (1.0e51/UNIT_ENERGY_IN_CGS);
     }

@@ -911,6 +911,15 @@ void fill_write_buffer(enum iofields blocknr, int *startindex, int pc, int type)
                     n++;
                 }
 #endif
+#ifdef GALSF_SFR_IMF_VARIATION_TEMPERATURE_DEPENDENCE
+            for(n = 0; n < pc; pindex++)
+                if(P[pindex].Type == type)
+                {
+                    for(k = 0; k < N_IMF_FORMPROPS; k++) {fp[k] = (MyOutputFloat) P[pindex].IMF_FormProps[k];}
+                    fp += N_IMF_FORMPROPS;
+                    n++;
+                }
+#endif  
             break;
 
         case IO_COSMICRAY_ENERGY:	/* energy in the cosmic ray field  */
@@ -1968,6 +1977,12 @@ int get_bytes_per_blockelement(enum iofields blocknr, int mode)
             else
                 bytes_per_blockelement = (N_IMF_FORMPROPS) * sizeof(MyOutputFloat);
 #endif
+#ifdef GALSF_SFR_IMF_VARIATION_TEMPERATURE_DEPENDENCE
+            if(mode)
+                bytes_per_blockelement = (N_IMF_FORMPROPS) * sizeof(MyInputFloat);
+            else
+                bytes_per_blockelement = (N_IMF_FORMPROPS) * sizeof(MyOutputFloat);
+#endif
             break;
 
         case IO_RADGAMMA:
@@ -2345,6 +2360,9 @@ int get_values_per_blockelement(enum iofields blocknr)
 
         case IO_IMF:
 #ifdef GALSF_SFR_IMF_VARIATION
+            values = N_IMF_FORMPROPS;
+#endif
+#ifdef GALSF_SFR_IMF_VARIATION_TEMPERATURE_DEPENDENCE
             values = N_IMF_FORMPROPS;
 #endif
             break;
@@ -2891,6 +2909,9 @@ int blockpresent(enum iofields blocknr)
 
         case IO_IMF:
 #ifdef GALSF_SFR_IMF_VARIATION
+            return 1;
+#endif
+#ifdef GALSF_SFR_IMF_VARIATION_TEMPERATURE_DEPENDENCE
             return 1;
 #endif
             break;

@@ -93,6 +93,29 @@ double calculate_relative_light_to_mass_ratio_from_imf(double stellar_age_in_gyr
     double log_mimf = log10(P[i].IMF_Mturnover);
     return (0.051+0.042*(log_mimf+2)+0.031*(log_mimf+2)*(log_mimf+2)) / 0.31;
 #endif
+#ifdef GALSF_SFR_IMF_VARIATION_TEMPERATURE_DEPENDENCE // Compute the IMF using the model of Steinhardt et al. 2020
+    double jeans_mass = P[i].IMF_Jeans_Mass;
+    double Max_Possible_Mass = pow(10.0 / stellar_age_in_gyr, 0.4); // computes the maximum possible mass of a star for the age
+    double Mmax;
+    if(JeansMass < Max_Possible_Mass){Mmax = JeansMass;}else{Mmax = Max_Possible_Mass;}
+    double m1 = P[i].IMF_Breakpoint1;
+    double m2 = P[i].IMF_Breakpoint2;
+    double light = 0.238095 * pow(m1, 4.2)
+            - 0.3125   * pow(m1, 3.2)
+            + 0.3125   * pow(m2, 3.2)
+            - 0.454545 * pow(m2, 2.2)
+            + 0.454545 * pow(Mmax, 2.2)
+            - 5.88476e-6;
+    double mass =  0.588235 * pow(m1, 1.7)
+            - 1.42857 * pow(m1, 0.7)
+            + 1.42857 * pow(m2, 0.7)
+            + 3.33333 / pow(m2, 0.3)
+            - 3.33333 / pow(Mmax, 0.3)
+            - 0.00803164;
+    double Kroupa_ratio = (4.73939 - (1.0 / (0.3 * pow(Mmax, 0.3)))) / (-0.06502 + (pow(Mmax, 2.2) / 2.2));
+    double ratio = light / mass;
+    return ratio / Kroupa_ratio;    // Return the ratio of the IMF to the Kroupa IMF
+#endif
 #ifdef GALSF_SFR_IMF_SAMPLING // account for IMF sampling model if not evolving individual stars
     double mu = 0.0115 * P[i].Mass * UNIT_MASS_IN_SOLAR; // 1 O-star per 100 Msun [more exactly calculated here as number of stars per solar mass with mass > 8 Msun, from our adopted Kroupa IMF from 0.01-100 Msun]
     double t=stellar_age_in_gyr*1000.,t1=3.7,t2=7.,t3=44.,a0=0.13,mu_min=1.e-3*mu;
@@ -149,6 +172,12 @@ void particle2in_addFB_fromstars(struct addFB_evaluate_data_in_ *in, int i, int 
 {
 #if defined(GALSF_FB_MECHANICAL) || defined(GALSF_FB_THERMAL)
     if(P[i].SNe_ThisTimeStep<=0) {in->Msne=0; return;} // no event
+    #ifdef GALSF_SFR_IMF_VARIATION_TEMPERATURE_DEPENDENCE
+    in->Msne = P[i].SNe_ThisTimeStep * (14.8/UNIT_MASS_IN_SOLAR) * P[i].IMF_RSNe; // assume default SNe carries 14.8 solar masses then scales with Variable IMF
+    double M_ejecta_avg = 14.8 * P[i].IMF_Mejecta_ScaleFactor; 
+    double M_ejecta_cgs = M_ejecta_avg * UNIT_MASS_IN_SOLAR;
+    in->SNe_v_ejecta = sqrt(2.0 * 1e51 / M_ejecta_cgs) / UNIT_VEL_IN_KMS; // assume ejecta are ~2607 km/s [KE=1e51 erg, for M=14.8 Msun], which is IMF-averaged
+    #endif
     // 'dummy' example model assumes all SNe are identical with IMF-averaged properties from the AGORA model (Kim et al., 2016 ApJ, 833, 202)
     in->Msne = P[i].SNe_ThisTimeStep * (14.8/UNIT_MASS_IN_SOLAR); // assume every SNe carries 14.8 solar masses (IMF-average)
     in->SNe_v_ejecta = 2607. / UNIT_VEL_IN_KMS; // assume ejecta are ~2607 km/s [KE=1e51 erg, for M=14.8 Msun], which is IMF-averaged
@@ -201,6 +230,21 @@ double mechanical_fb_calculate_eventrates(int i, double dt)
 #ifdef GALSF_FB_MECHANICAL /* STELLAR-POPULATION version: mechanical feedback: 'dummy' example model below assumes a constant SNe rate for t < 30 Myr, then nothing. experiment! */
     double star_age = evaluate_stellar_age_Gyr(i);
     if(star_age < 0.03)
+    #ifdef GALSF_SFR_IMF_VARIATION_TEMPERATURE_DEPENDENCE
+
+        // Check if temperature is within valid range for IMF model use (> 80K is invalid)
+        double base_SN_rate = 3.e-4; // Baseline supernova rate (assumed constant, can be scaled)
+        double sn_rate_imf_ratio = P[i].IMF_RSNe;
+        double sn_rate_scaled = sn_rate_imf_ratio * base_SN_rate;  // Scaled supernova rate
+        // Compute expected number of SNe for this particle and timestep
+        double p = sn_rate_imf_ratio * (P[i].Mass*UNIT_MASS_IN_SOLAR) * (dt*UNIT_TIME_IN_MYR); // unit conversion factor
+        double n_sn_0=(float)floor(p); p-=n_sn_0; if(get_random_number(P[i].ID+6) < p) {n_sn_0++;} // determine if SNe occurs
+        // Assign number of SNe to this particle
+        P[i].SNe_ThisTimeStep = n_sn_0; // assign to particle
+        return sn_rate_scaled;
+
+#endif
+
     {
         double RSNe = 3.e-4; // assume a constant rate ~ 3e-4 SNe/Myr/solar mass for t = 0-30 Myr //
         double p = RSNe * (P[i].Mass*UNIT_MASS_IN_SOLAR) * (dt*UNIT_TIME_IN_MYR); // unit conversion factor
@@ -209,7 +253,6 @@ double mechanical_fb_calculate_eventrates(int i, double dt)
         return RSNe;
     }
 #endif
-
     return 0;
 }
 

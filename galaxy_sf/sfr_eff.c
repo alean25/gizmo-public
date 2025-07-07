@@ -26,7 +26,7 @@
 #ifdef GALSF // top-level switch for compiling the routines below //
 
 
-#if defined(GALSF_SFR_IMF_VARIATION) || defined(GALSF_SFR_IMF_SAMPLING)
+#if defined(GALSF_SFR_IMF_VARIATION) || defined(GALSF_SFR_IMF_SAMPLING) || defined(GALSF_SFR_IMF_VARIATION_TEMPERATURE_DEPENDENCE)
 /* function to determine what the IMF of a new star particle will be, based
     on the gas properties of the particle out of which it forms */
 void assign_imf_properties_from_starforming_gas(int i)
@@ -68,6 +68,32 @@ void assign_imf_properties_from_starforming_gas(int i)
     for(k=0;k<3;k++)
     {
         double acc_tmp = P[i].GravAccel[k];
+#ifdef GALSF_SFR_IMF_VARIATION_TEMPERATURE_DEPENDENCE // Compute the IMF using the model of Steinhardt et al. 2020
+    double temp = get_temperature(i);
+    P[i].IMF_Timf = temp; // Temperature of the gas particle at the moment of star formation
+    P[i].IMF_Breakpoint1 = 0.08 * (temp/20) * (temp/20); // Compute the breakpoint 1 of the IMF using the model of Steinhardt et al. 2020
+    P[i].IMF_Breakpoint2 = 0.5 * (temp/20) * (temp/20); // Compute the breakpoint 2 of the IMF using the model of Steinhardt et al. 2020
+    double m_break1 = P[i].IMF_Breakpoint1;
+    double m_break2 = P[i].IMF_Breakpoint2;
+    double cs = Get_Gas_effective_soundspeed_i(i) * All.cf_afac3;
+    double p = SphP[i].Density;
+    double jeans_mass = pow(cs, 3) / pow(p*pow(All.Gini, 3), 0.5);
+    P[i].IMF_Jeans_Mass = jeans_mass;
+    double sn_mass_fraction = (1.0 / 1.3) * (pow(8, -1.3) - pow(jeans_mass, -1.3)); // Mass fraction of stars forming SNe (from 8 to 100 solar masses)
+     // Compute total mass from custom IMF normalization over relevant mass ranges
+    double total_mass_from_imf =
+        0.588235 * pow(m_break1, 1.7)
+        - 1.42857 * pow(m_break1, 0.7)
+        + 1.42857 * pow(m_break2, 0.7)
+        + 3.33333 / pow(m_break2, 0.3)
+        - 3.33333 / pow(100, 0.3)
+        - 0.00803164;
+    double sn_rate_variable_imf = sn_mass_fraction / total_mass_from_imf;  // Supernova mass per unit stellar mass for variable IMF  
+    double sn_rate_kroupa = 0.0127099561; // Reference values from Kroupa IMF for Supernova mass per unit stellar mass 
+    double sn_rate_imf_ratio = sn_rate_variable_imf / sn_rate_kroupa;
+    P[i].IMF_RSNe = sn_rate_imf_ratio;
+#endif
+
 #ifdef PMGRID
         acc_tmp += P[i].GravPM[k];
 #endif
@@ -522,7 +548,7 @@ void star_formation_parent_routine(void)
 #endif /* closes ifdef(BH_SEED_FROM_LOCALGAS) */
                         
                         /* ok, we're going to make a star! */
-#if defined(GALSF_SFR_IMF_VARIATION) || defined(GALSF_SFR_IMF_SAMPLING)
+#if defined(GALSF_SFR_IMF_VARIATION) || defined(GALSF_SFR_IMF_SAMPLING) || defined(GALSF_SFR_IMF_VARIATION_TEMPERATURE_DEPENDENCE)
                         /* if we're allowing for a variable IMF, this is where we will calculate the IMF properties produced from the gas forming stars */
                         assign_imf_properties_from_starforming_gas(i);
 #endif
