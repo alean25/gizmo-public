@@ -93,7 +93,7 @@ double calculate_relative_light_to_mass_ratio_from_imf(double stellar_age_in_gyr
     double log_mimf = log10(P[i].IMF_Mturnover);
     return (0.051+0.042*(log_mimf+2)+0.031*(log_mimf+2)*(log_mimf+2)) / 0.31;
 #endif
-#ifdef GALSF_SFR_IMF_VARIATION_TEMPERATURE_DEPENDENCE // Compute the IMF using the model of Steinhardt et al. 2020
+#ifdef GALSF_SFR_IMF_VARIATION_TEMPERATURE_DEPENDENCE // Compute the IMF using the Steinhardt model as described in  Steinhardt et al. 2020
     double jeans_mass = P[i].IMF_Jeans_Mass;
     double Max_Possible_Mass = pow(10.0 / stellar_age_in_gyr, 0.4); // computes the maximum possible mass of a star for the age
     double Mmax;
@@ -234,14 +234,14 @@ double mechanical_fb_calculate_eventrates(int i, double dt)
 
         // Check if temperature is within valid range for IMF model use (> 80K is invalid)
         double base_SN_rate = 3.e-4; // Baseline supernova rate (assumed constant, can be scaled)
-        double sn_rate_imf_ratio = P[i].IMF_RSNe;
-        double sn_rate_scaled = sn_rate_imf_ratio * base_SN_rate;  // Scaled supernova rate
+        double sn_rate_imf_ratio = P[i].IMF_RSNe; //import ratio
+        double sn_rate_scaled = sn_rate_imf_ratio * base_SN_rate; // Scaled supernova rate
         // Compute expected number of SNe for this particle and timestep
-        double p = sn_rate_imf_ratio * (P[i].Mass*UNIT_MASS_IN_SOLAR) * (dt*UNIT_TIME_IN_MYR); // unit conversion factor
+        double p = sn_rate_scaled * (P[i].Mass*UNIT_MASS_IN_SOLAR) * (dt*UNIT_TIME_IN_MYR); // unit conversion factor
         double n_sn_0=(float)floor(p); p-=n_sn_0; if(get_random_number(P[i].ID+6) < p) {n_sn_0++;} // determine if SNe occurs
         // Assign number of SNe to this particle
         P[i].SNe_ThisTimeStep = n_sn_0; // assign to particle
-        return sn_rate_scaled;
+        return sn_rate_scaled; 
 
 #endif
 

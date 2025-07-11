@@ -75,7 +75,7 @@ void assign_imf_properties_from_starforming_gas(int i)
     P[i].IMF_Breakpoint2 = 0.5 * (temp/20) * (temp/20); // Compute the breakpoint 2 of the IMF using the model of Steinhardt et al. 2020
     double m_break1 = P[i].IMF_Breakpoint1;
     double m_break2 = P[i].IMF_Breakpoint2;
-    double cs = Get_Gas_effective_soundspeed_i(i) * All.cf_afac3;
+    double cs = Get_Gas_effective_soundspeed_i(i) * All.cf_afac3;// actual sound speed in the simulation: might be unphysically high for SF conditions!
     double p = SphP[i].Density;
     double jeans_mass = pow(cs, 3) / pow(p*pow(All.Gini, 3), 0.5);
     P[i].IMF_Jeans_Mass = jeans_mass;
@@ -86,7 +86,7 @@ void assign_imf_properties_from_starforming_gas(int i)
         - 1.42857 * pow(m_break1, 0.7)
         + 1.42857 * pow(m_break2, 0.7)
         + 3.33333 / pow(m_break2, 0.3)
-        - 3.33333 / pow(100, 0.3)
+        - 3.33333 / pow(jeans_mass, 0.3)
         - 0.00803164;
     double sn_rate_variable_imf = sn_mass_fraction / total_mass_from_imf;  // Supernova mass per unit stellar mass for variable IMF  
     double sn_rate_kroupa = 0.0127099561; // Reference values from Kroupa IMF for Supernova mass per unit stellar mass 
