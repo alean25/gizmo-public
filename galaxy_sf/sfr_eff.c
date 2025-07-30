@@ -81,15 +81,13 @@ void assign_imf_properties_from_starforming_gas(int i)
     P[i].IMF_Jeans_Mass = jeans_mass;
     double sn_mass_fraction = (1.0 / 1.3) * (pow(8, -1.3) - pow(jeans_mass, -1.3)); // Mass fraction of stars forming SNe (from 8 to 100 solar masses)
      // Compute total mass from custom IMF normalization over relevant mass ranges
-    double total_mass_from_imf =
-        0.588235 * pow(m_break1, 1.7)
-        - 1.42857 * pow(m_break1, 0.7)
-        + 1.42857 * pow(m_break2, 0.7)
-        + 3.33333 / pow(m_break2, 0.3)
-        - 3.33333 / pow(jeans_mass, 0.3)
-        - 0.00803164;
+     double total_mass_from_imf =
+     (pow(m_break1, 1.7) - pow(0.08, 1.7)) / 1.7
+     + 0.08 * (pow(m_break2, 0.7) - pow(m_break1, 0.7)) / 0.7
+     + 0.04 * (pow(jeans_mass, -0.3) - pow(m_break2, -0.3)) / (-0.3);
+ 
     double sn_rate_variable_imf = sn_mass_fraction / total_mass_from_imf;  // Supernova mass per unit stellar mass for variable IMF  
-    double sn_rate_kroupa = 0.0127099561; // Reference values from Kroupa IMF for Supernova mass per unit stellar mass 
+    double sn_rate_kroupa = 0.010479518233140372; // Reference values from Kroupa IMF for Supernova mass per unit stellar mass 
     double sn_rate_imf_ratio = sn_rate_variable_imf / sn_rate_kroupa;
     P[i].IMF_RSNe = sn_rate_imf_ratio;
 #endif

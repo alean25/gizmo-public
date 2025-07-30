@@ -100,19 +100,15 @@ double calculate_relative_light_to_mass_ratio_from_imf(double stellar_age_in_gyr
     if(JeansMass < Max_Possible_Mass){Mmax = JeansMass;}else{Mmax = Max_Possible_Mass;}
     double m1 = P[i].IMF_Breakpoint1;
     double m2 = P[i].IMF_Breakpoint2;
-    double light = 0.238095 * pow(m1, 4.2)
-            - 0.3125   * pow(m1, 3.2)
-            + 0.3125   * pow(m2, 3.2)
-            - 0.454545 * pow(m2, 2.2)
-            + 0.454545 * pow(Mmax, 2.2)
-            - 5.88476e-6;
-    double mass =  0.588235 * pow(m1, 1.7)
-            - 1.42857 * pow(m1, 0.7)
-            + 1.42857 * pow(m2, 0.7)
-            + 3.33333 / pow(m2, 0.3)
-            - 3.33333 / pow(Mmax, 0.3)
-            - 0.00803164;
-    double Kroupa_ratio = (4.73939 - (1.0 / (0.3 * pow(Mmax, 0.3)))) / (-0.06502 + (pow(Mmax, 2.2) / 2.2));
+    double light = 
+            (pow(m1, 4.2) - pow(0.08, 4.2)) / 4.2
+            + 0.08 * (pow(m2, 3.2) - pow(m1, 3.2)) / 3.2
+            + 0.04 * (pow(Mmax, 2.2) - pow(m2, 2.2)) / (2.2);
+    double mass =
+            (pow(m1, 1.7) - pow(0.08, 1.7)) / 1.7
+            + 0.08 * (pow(m2, 0.7) - pow(m1, 0.7)) / 0.7
+            + 0.04 * (pow(Mmax, -0.3) - pow(m2, -0.3)) / (-0.3);
+    double Kroupa_ratio = (0.0027127467645896093 + 0.04 * (pow(Mmax, 2.2) - pow(m2, 2.2)) / (2.2))/(0.058643161905410184  + 0.04 * (pow(Mmax, -0.3) - pow(m2, -0.3)) / (-0.3));
     double ratio = light / mass;
     return ratio / Kroupa_ratio;    // Return the ratio of the IMF to the Kroupa IMF
 #endif
